@@ -23,8 +23,10 @@ the pre-CASC "pod-retail" builds Blizzard still serves.
 - **CDN region** selection (EU / NA) with automatic cross-region failover.
 - **Two ways to run** — an interactive menu when launched with no arguments
   (double-click), or a scriptable flag interface.
-- **Pristine output** — every file is MD5-verified and the build scratch is cleaned up,
-  leaving a clean client folder.
+- **Verified end to end** — the partial download manifest is first authenticated against
+  the content-hash pinned in the recipe (so a tampered or MITM'd manifest fails closed and
+  can't redirect or substitute downloads), every produced file is then MD5-verified, and
+  the build scratch is cleaned up — leaving a clean client folder.
 - **Localhost safety guard** — in full-client (`client`) mode the rebuilt client's
   realmlist defaults to `127.0.0.1` (see below).
 
@@ -171,14 +173,16 @@ Two network/fixture-gated acceptance groups sit alongside it:
   and an MPQ-handle cleanup regression (the latter two run under the `wcrtests` omnibus
   target). All skip cleanly when the fixtures are absent, so CI / fresh checkouts stay
   green.
-- **acceptance_cata434** (4.3.4): gated by the `WCR_LIVE` environment variable; downloads
-  ~46 MB from Blizzard's CDN and verifies the binaries byte-exact.
+- **acceptance_cata434** (4.3.4): an opt-in live test, **registered only when you configure
+  with `-DWCR_LIVE_TESTS=ON`**. It downloads ~46 MB from Blizzard's CDN and verifies the
+  binaries byte-exact. Registering it auto-sets `WCR_LIVE=1` so it actually runs (instead
+  of reporting a green "0 assertions"), so a default offline `ctest` never sees it.
 
 ```powershell
-# Run the live 4.3.4 acceptance:
-$env:WCR_LIVE = "1"
+# Register + run the live 4.3.4 acceptance:
+cmake --preset windows-vcpkg -DWCR_LIVE_TESTS=ON
+cmake --build --preset windows-vcpkg
 ctest --test-dir WoWClientRebuilder_build -C Release -R acceptance_cata434
-Remove-Item Env:\WCR_LIVE
 ```
 
 ## Localhost safety guard
