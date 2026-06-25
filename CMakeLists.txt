@@ -53,6 +53,11 @@ target_include_directories(wcrcore PUBLIC src/wcrcore src/cli
 target_link_libraries(wcrcore PUBLIC storm CURL::libcurl)
 
 add_executable(wowrebuild src/cli/main.cpp)
+# Embed the MangosTools application icon on Windows (the VS generator compiles
+# the .rc automatically; the resource is Windows-only and inert elsewhere).
+if(WIN32)
+  target_sources(wowrebuild PRIVATE src/cli/wowrebuild.rc)
+endif()
 target_link_libraries(wowrebuild PRIVATE wcrcore)
 
 enable_testing()
