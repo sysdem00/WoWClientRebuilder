@@ -123,7 +123,7 @@ Bytes MpqArchive::extract(const std::string& name) const
     // we never drop the tail of the file.
     for (;;)
     {
-        BOOL ok = SFileReadFile(hf, buf, sizeof(buf), &rd, nullptr);
+        bool ok = SFileReadFile(hf, buf, sizeof(buf), &rd, nullptr);
         out.insert(
             out.end(), buf,
             buf + rd); // append the bytes actually read (incl. final partial)
