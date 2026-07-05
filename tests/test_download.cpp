@@ -33,12 +33,14 @@
 #include "bytes.h"
 #include <string>
 #include <algorithm>
+#include <filesystem>
+
 static std::string file_url(const std::string& abs)
 {
     std::string p = abs;
     std::replace(p.begin(), p.end(), '\\',
                  '/'); // Windows: convert backslashes for file:// URL
-    return "file:///" + p;
+    return "file://" + p;
 }
 TEST_CASE("download_file copies a file:// source and validates size")
 {
@@ -50,8 +52,7 @@ TEST_CASE("download_file copies a file:// source and validates size")
         data[i] = (uint8_t)(i * 7);
     }
     wcr::write_file(src, data);
-    std::string abs = std::string(
-        _fullpath(nullptr, src.c_str(), 0)); // absolute path for file://
+    std::string abs = std::filesystem::absolute(src).string();
     // act
     wcr::DownloadOpts o;
     o.expected_size = (long)data.size();

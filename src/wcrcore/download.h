@@ -43,6 +43,9 @@ struct DownloadOpts
         /// When non-empty, enables a live \r-based progress bar on stdout.
         /// Set to the filename or a short label for the download.
         std::string progress_label;
+        /// If true and the destination file already exists, skip the download
+        /// entirely without any verification.
+        bool skip_if_exists = false;
 };
 /// Download url to dest on disk, optionally resuming and verifying size.
 void download_file(const std::string& url, const std::string& dest,

@@ -203,6 +203,7 @@ void reconstruct(const Recipe& r, const std::string& outDir,
         // and marked as reliable.
         // mopts.expected_size = m.size;
         mopts.progress_label = url_basename(m.url);
+        mopts.skip_if_exists = true;  // Skip MPQ download if file already exists
         printf("Downloading %s...\n", url_basename(m.url).c_str());
         download_file(m.url, dest, mopts);
         // Track BEFORE opening: if MpqArchive construction throws (e.g. corrupt

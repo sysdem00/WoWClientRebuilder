@@ -141,12 +141,22 @@ namespace wcr
 void download_file(const std::string& url, const std::string& dest,
                    const DownloadOpts& opts)
 {
+    // Skip entirely if file already exists and skip_if_exists is set
+    if (opts.skip_if_exists)
+    {
+        long long have = file_size(dest);
+        if (have > 0)
+        {
+            return; // File exists, skip download
+        }
+    }
+
     // Resume logic: if the destination already has bytes and resume is enabled,
     // open in append mode and ask the server for a byte-range starting where we
     // left off (HTTP Range: bytes=<start>-).  Otherwise start fresh ("wb").
     long long start = 0;
     const char* mode = "wb";
-    if (opts.resume)
+    if (opts.resume && !opts.skip_if_exists)
     {
         long long have = file_size(dest);
         if (have > 0)
