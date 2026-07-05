@@ -178,10 +178,20 @@ void reconstruct(const Recipe& r, const std::string& outDir,
     for (const ZipSource& z : r.zips)
     {
         std::string dest = outDir + "/" + url_basename(z.url);
-        printf("Downloading %s...\n", url_basename(z.url).c_str());
-        DownloadOpts zopts;
-        zopts.progress_label = url_basename(z.url);
-        download_file(z.url, dest, zopts);
+        
+        // Check if file already exists - skip download if it does
+        std::error_code fec;
+        if (std::filesystem::exists(dest, fec))
+        {
+            printf("Skipping %s (already exists)...\n", url_basename(z.url).c_str());
+        }
+        else
+        {
+            printf("Downloading %s...\n", url_basename(z.url).c_str());
+            DownloadOpts zopts;
+            zopts.progress_label = url_basename(z.url);
+            download_file(z.url, dest, zopts);
+        }
         // Track the zip file BEFORE read_file: if read_file throws (e.g. a
         // disk error after a successful download), the exception path below
         // needs zipSourceFiles to be populated so it can remove the stranded
@@ -283,8 +293,18 @@ void reconstruct(const Recipe& r, const std::string& outDir,
                 part = dst + ".part";
                 std::filesystem::create_directories(
                     std::filesystem::path(dst).parent_path());
+                
+                // Check if destination file already exists physically - skip download if it does
+                std::error_code fec;
+                if (std::filesystem::exists(dst, fec))
+                {
+                    printf("  %-28s SKIPPED (already exists)\n", a.outName.c_str());
+                    skipped = true;
+                    break;
+                }
+                
                 DownloadOpts popts;
-                popts.resume = true;
+                popts.resume = false;  // Disable resume since we're not checking partial files
                 popts.expected_size = a.size;
                 popts.progress_label = a.outName;
                 if (opts.journal && is_done(*opts.journal, a.outName))
