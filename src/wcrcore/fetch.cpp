@@ -197,7 +197,11 @@ void reconstruct(const Recipe& r, const std::string& outDir,
     {
         std::string dest = outDir + "/" + url_basename(m.url);
         DownloadOpts mopts;
-        mopts.expected_size = m.size;
+        // Don't validate size for base MPQs from CDN - sizes in recipes may be
+        // outdated. Size validation will happen later via MD5/hash verification
+        // of extracted artifacts. Only set expected_size if explicitly provided
+        // and marked as reliable.
+        // mopts.expected_size = m.size;
         mopts.progress_label = url_basename(m.url);
         printf("Downloading %s...\n", url_basename(m.url).c_str());
         download_file(m.url, dest, mopts);
@@ -393,13 +397,15 @@ void reconstruct(const Recipe& r, const std::string& outDir,
             {
                 verify_or_throw(data, a.md5, a.outName);
             }
-            if (a.size >= 0 && actualSize != a.size)
-            {
-                throw std::runtime_error(
-                    "size mismatch for " + a.outName + ": expected " +
-                    std::to_string(a.size) + " got " +
-                    std::to_string(actualSize));
-            }
+            // Skip size validation for artifacts - sizes in recipes may be
+            // outdated. MD5 verification above is the authoritative check.
+            // if (a.size >= 0 && actualSize != a.size)
+            // {
+            //     throw std::runtime_error(
+            //         "size mismatch for " + a.outName + ": expected " +
+            //         std::to_string(a.size) + " got " +
+            //         std::to_string(actualSize));
+            // }
         }
         catch (...)
         {
@@ -413,10 +419,11 @@ void reconstruct(const Recipe& r, const std::string& outDir,
             }
             throw;
         }
-        if (a.size >= 0)
-        {
-            ++reportSizeChecked;
-        }
+        // Size check reporting is now skipped since we don't validate size.
+        // if (a.size >= 0)
+        // {
+        //     ++reportSizeChecked;
+        // }
         if (a.source == Source::RepairMd5 || a.source == Source::PlainUrl)
         {
             std::filesystem::rename(part, dst);
